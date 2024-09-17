@@ -1,0 +1,166 @@
+---
+title: "AWS EC2, Nginx, Reverse Proxy and more"
+publishedAt: "2024-07-31"
+summary: "My first post on my new blog."
+---
+
+# AWS - EC2
+
+## What is EC2 Server?
+
+EC2 stands for Elastic Compute Version 2
+
+- Elastic - increase/decrease size of the machine
+- compute - machine
+
+It let’s you -
+
+- Rent servers
+- Manage Domains
+- Upload objects (mp4 files, jpegs)
+- Autoscale servers
+- Create k8s clusters
+
+What are EC2 servers? - EC2 servers are VMs (virtual machines) on AWS
+
+## Why do you need to use AWS machines? why can’t everyone access my website on my local machine? localhost:3000?
+
+because, ec2 machines provide you public ip’s that are listed.
+
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/45f8e93c-4591-4bff-809c-1d6942d51ac0/86f86707-0f32-4871-878c-f82597ca6e5b/image.png)
+
+### Step 1 - Create EC2 machine in AWS
+
+1.  launch an ec2 instance in aws
+
+2.  select machine (linux, ubuntu, windows)
+
+- select architecture - 64 bits (arm vs x86)
+- arm - suited for mobile devices, less performance
+- x86 - high performance than arm and suited for desktop and servers
+
+3. select instance type
+
+4. create key-pair login - used for accessing the instance securely
+
+5. network setting -
+
+- create security group
+
+1. allow SSH from anywhere (0.0.0.0/0) - used for accessing the instance from anywhere - 22
+
+2. allow https traffic from internet - 443
+
+3. allow http traffic from internet - 80
+
+### Step 2 - SSH into server
+
+```html
+chmod 700 raj-password.pem ssh -i raj-password.pem ubuntu@67.202.63.88 public ip
+- 67.202.63.88
+```
+
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/45f8e93c-4591-4bff-809c-1d6942d51ac0/6e592733-105c-4928-a5d5-a5d483b33771/image.png)
+
+### Step 3 - Clone the repository
+
+Clone the server using git
+
+```html
+git clone https://github.com/hkirat/sum-server cd sum-server
+```
+
+### Step 4 - Install node on the machine using NVM
+
+**This is the most beginner friendly way of deploying application by directly installing node on the aws machine. Ideally you shouldn’t do it cause there are better ways of which one is to use docker containerization.**
+
+Command to install NVM on ubuntu
+
+```html
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+```
+
+above command returns this —>
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+Now install node using
+
+```html
+nvm install 20 npm install node index.js #start backend in sum-server
+```
+
+### **Step 5 - Try hitting the server**
+
+you have your public ipv4 address/dns
+
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/45f8e93c-4591-4bff-809c-1d6942d51ac0/c16e4831-8ca6-4196-a27d-a2d066a9d0a3/image.png)
+
+Try visiting the backend at your_domain:3000 or in this case it’s your_domain:8080
+
+http://52.205.42.105:8080/todos
+
+you won’t be able to see your website because only 443, 80 and 22 ports are open.
+
+To be able to access the website you need to make sure the specified ports 3000 or 8080 are open
+
+1. Go to security → click on security groups
+
+   ![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/45f8e93c-4591-4bff-809c-1d6942d51ac0/2ebbcb8e-7cb6-4f28-b401-117a1ced846e/image.png)
+
+   ![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/45f8e93c-4591-4bff-809c-1d6942d51ac0/6f07a48f-6c30-490e-8097-3525df828de7/image.png)
+
+2. Add Inbound rules
+
+   ![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/45f8e93c-4591-4bff-809c-1d6942d51ac0/f99f8be8-8e4e-478c-a311-1319748d389d/image.png)
+
+See the server live
+you can also replace public ipv4 with the dns —> [ec2-52-205-42-105.compute-1.amazonaws.com](http://ec2-52-205-42-105.compute-1.amazonaws.com/):8080/todos
+
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/45f8e93c-4591-4bff-809c-1d6942d51ac0/49f01622-e3fe-4e5a-9c4e-0ee30738486a/image.png)
+
+# Nginx - Reverse Proxy
+
+### What is Proxy?
+
+If your req is blocked from a certain IP then you can send your req through a proxy server.
+
+Think of it as a middle server that sends a req on your behalf
+
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/45f8e93c-4591-4bff-809c-1d6942d51ac0/40fd4278-66f5-40b7-aa94-eead1e611467/image.png)
+
+### What is Reverse Proxy?
+
+using reverse proxy, you can run multiple node processes on your single ec2 instance.
+
+on the basis on incoming req, it identify from where the req is coming and it forwards it to particular node process.
+
+It is setup at port 80. so you can run multiple process on port like 8080, 8081, 8082.
+
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/45f8e93c-4591-4bff-809c-1d6942d51ac0/a1404b74-a130-44e4-983f-59eb3a880c05/image.png)
+
+### Creating a reverse proxy
+
+my machine has 2 servers
+
+1. sum-server —> be1
+2. hello-world —> be2
+
+```html
+sudo rm sudo vi /etc/nginx/nginx.conf #deleting the default config sudo vi
+/etc/nginx/nginx.conf events { # Event directives... } server { server_name
+be1.rajthombare.xyz; location / { proxy_pass http://localhost:8080;
+proxy_http_version 1.1; proxy_set_header Upgrade $http_upgrade; proxy_set_header
+Connection 'upgrade'; proxy_set_header Host $host; proxy_cache_bypass
+$http_upgrade; } } server { server_name be2.rajthombare.xyz; location / {
+proxy_pass http://localhost:8081; proxy_http_version 1.1; proxy_set_header
+Upgrade $http_upgrade; proxy_set_header Connection 'upgrade'; proxy_set_header
+Host $host; proxy_cache_bypass $http_upgrade; } } sudo nginx -s reload #reload
+the server pm2 start index.js #to start instances in the background
+```
+
+### Certbot
+
+get ssl/tls certificate to run your app on https

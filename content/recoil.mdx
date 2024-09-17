@@ -1,0 +1,110 @@
+---
+title: "State Management using Recoil"
+publishedAt: "2024-07-31"
+summary: "My first post on my new blog."
+---
+
+Recoil
+Core Concepts
+Atom - atom is state units, they subscribe to your components, so whenever any atom’s state updates, it re-renders.
+useRecoilValue - returns only value
+useRecoilState - returns both set function and value
+useSetRecoilState - returns on set function
+Selector - selector is derived state from other atom. It takes get as a function and using which you can get access to other atoms state.
+const fontSizeLabelState = selector({
+key: 'fontSizeLabelState',
+get: ({get}) => {
+const fontSize = get(fontSizeState);
+const unit = 'px';
+
+    return `${fontSize}${unit}`;
+
+},
+});
+​
+Async Queries
+Selectors can be used as one way to incorporate asynchronous data into the Recoil data-flow graph.
+Selectors represent "idempotent" functions i.e., For a given set of inputs they should always produce the same results.
+This is important as selector evaluations may be cached, restarted, or executed multiple times. Because of this, selectors are generally a good way to model read-only DB queries.
+If the user names were stored in some database we need to query, all we need to do is return a Promise or use an async function. If any dependencies change, the selector will be re-evaluated and execute a new query. The results are cached, so the query will only execute once per unique input.
+—> Query Default Atom Values
+If the default values are coming from async operation
+export const notificationsAtom = atom({
+key: "notificationsAtom",
+default: selector({
+key: 'notificationsAtom/default',
+get: async () => {
+const response = await axios.get(
+"https://sum-server.100xdevs.com/notifications"
+);
+return response.data;
+}
+})
+});
+//myFunction(){}
+//get: () => myFunction()
+​
+Atom Family
+An Atom Family represents a collection of atoms. It let’s you create multiple Atoms.
+import { atom, atomFamily } from "recoil";
+
+export const TODOS = [{
+    id: 1,
+    title: "Go to Gym",
+    description: "Hit the gym from 7-9"
+}, {
+    id: 2,
+    title: "Go to eat food",
+    description: "Eat food from from 9-11"
+}]
+
+export const todosAtomFamily = atomFamily({
+    key: 'todosAtomFamily',
+    default: (id) => {
+        return TODOS.find(x => x.id === id)
+    }
+})
+​
+Selector Family
+A selectorFamily is a powerful pattern that is similar to a selector, but allows you to pass parameters to the get and set callbacks of a selector. 
+To make asynchronous calls, you need selector in an Atom. Similarly, In Atom Family, you need Selector family to get data from server.
+In the TODO application, let’s say you are supposed to get TODOs from server.
+export const todosAtomFamily = atomFamily({
+  key: "todosAtomFamily",
+  default: selectorFamily({
+    key: "todosSelectorFamily",
+    get:
+      (id: number) =>
+        async () => {
+          await new Promise((r) => setTimeout(r, 5000))
+          const res = await axios.get(
+            `https://sum-server.100xdevs.com/todo?id=${id}`
+          );
+          return res.data.todo;
+        },
+  }),
+});
+​
+useRecoilStateLoadable & useRecoilValueLoadable
+This hook is intended to be used for reading the value of asynchronous selectors. This hook will implicitly subscribe the component to the given state.
+
+It returns a Loadable object, which provides information about the current state (loading, hasValue, or hasError) of the atom or selector.
+const Todo = ({ id }: TodoProps) => {
+const todo = useRecoilValueLoadable(todosAtomFamily(id)); // return only state
+const [todo, setTodo]= useRecoilStateLoadable(todosAtomFamily(id)); // return state & setter function
+if (todo.state === "loading") {
+return <div>Loading...</div>;
+} else if (todo.state === "hasValue") {
+return (
+
+<>
+{todo?.contents.title}
+{todo?.contents.description}
+<br />
+</>
+);
+} else if (todo.state === "hasError") {
+return <div>Error getting data from backend</div>;
+}
+};
+​

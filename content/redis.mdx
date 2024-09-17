@@ -1,0 +1,69 @@
+---
+title: "Understanding Redis"
+publishedAt: "2024-08-01"
+summary: "My first post on my new blog."
+---
+
+### Start Redis
+
+Let’s start redis locally and start using it as a DB
+
+```html
+docker run --name my-redis -d -p 6379:6379 redis
+```
+
+Connecting to your container and Redis CLI
+
+```html
+docker exec -it container_id /bin/bash redis-cli
+```
+
+### **SET, GET and DELETE Data**
+
+SET mykey “Hello”
+
+GET mykey
+
+DEL mykey
+
+### How would you use it for caching data?
+
+```html
+SET tracks "[{title:'typescript', description:''}]"
+```
+
+### HSET/HGET/HDEL - (H = HASH)
+
+if you want to store multiple values with same key
+
+```html
+HSET user:100 name "Raj Thombare" email "raj@gmail.com" age "22" HGET user:100
+name HGET user:100 email HSET tracks:101 "[{title:'typescript',
+description:''}]" HGET tracks:101
+```
+
+### **Redis as a queue**
+
+Pushing to a Queue
+
+```html
+LPUSH problems 1 LPUSH problems 2
+```
+
+Popping from a Queue
+
+```html
+RPOP problems RPOP problems
+```
+
+Blocked pop
+
+```html
+BRPOP problems 0 (infinite) BRPOP problems 30
+```
+
+The last argument represents the timeout before the blocking should be stopped
+
+```
+
+```

@@ -1,0 +1,68 @@
+---
+title: "Learn Docker Beginner to Expert"
+publishedAt: "2024-07-31"
+summary: "My first post on my new blog."
+---
+
+1. Docker Registry - It holds container images that can be distributed to a Docker Engine
+
+---
+
+2. Docker Engine - It’s open-source containerization technology that helps developers package applications into containers
+
+---
+
+3. Container - A container is a running instance of an image. They are isolated. Its just a executable instance of your source code and OS libraries and required dependencies to run the code on your machine
+
+A good mental model for a container is when you run `node index.js` on your machine from some source code you got from github
+
+---
+
+4. Image - A Docker image is a lightweight, standalone, executable package that includes everything needed to run a piece of software, including the code, a runtime, libraries, environment variables, and config files.
+
+A good mental model for an image is `Your codebase on github`
+
+![Inside Docker.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/45f8e93c-4591-4bff-809c-1d6942d51ac0/fb7621d7-3284-4250-bb74-312305e6f56d/Inside_Docker.png)
+
+## Container Vs Image
+
+Image contains the source code and every dependency along with os whereas container is just a running instance of an image
+
+![image vs container.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/45f8e93c-4591-4bff-809c-1d6942d51ac0/8b5e5db4-9bd0-4f86-8aa2-dcefc0676e97/image_vs_container.png)
+
+## Docker Commands
+
+1. docker kill - to kill running container
+2. docker run -p 27017:27018 -d mongo - to run images
+
+   -d to run in detached mode and -p for port mapping
+
+3. docker rmi - to remove image from locally
+4. docker ps - view running containers
+5. docker images - view images
+6. docker build - create your own containers
+7. docker start image name - to start
+
+# Run Postgres/Mongo Locally using Docker
+
+1. docker run -e POSTGRES_PASSWORD=admin -d -p 5432:5432 postgres
+
+```jsx
+container id: feed85e060d4e489356de310063ee1d7555a1cdcc9ceed0e567e7519f63aa2ee
+```
+
+1. run docker ps —> get docker Id
+2. Get into docker container
+
+```jsx
+docker exec -it feed85e060 /bin/bash
+```
+
+1. root@feed85e060d4:/# psql -U postgres
+
+psql (16.2 (Debian 16.2-1.pgdg120+2))
+Type "help" for help.
+
+postgres=# \dt; —> to view db tables
+
+1. To view in web run —> npx prisma studio
